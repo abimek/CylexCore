@@ -8,7 +8,6 @@ use core\server_reset\tasks\ResetServerTask;
 
 class ResetServerManager
 {
-
     public const TIME = 20 * (60 * 60);
 
     public static function enableReset(int $time = self::TIME)
