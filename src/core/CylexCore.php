@@ -24,12 +24,12 @@ class CylexCore extends PluginBase
         return self::$instance;
     }
 
-    public function onDisable()
+    public function onDisable(): void
     {
         ManagerLoader::disableManagers();
     }
 
-    public function onEnable()
+    public function onEnable(): void
     {
         if (!InvMenuHandler::isRegistered()) {
             InvMenuHandler::register($this);
