@@ -23,43 +23,33 @@ namespace muqsit\invmenu\session;
 
 use pocketmine\math\Vector3;
 
-class MenuExtradata
-{
+class MenuExtradata{
 
-    /** @var Vector3|null */
-    protected $position;
+	protected ?Vector3 $position = null;
+	protected ?string $name = null;
 
-    /** @var string|null */
-    protected $name;
+	public function getPosition() : ?Vector3{
+		return $this->position;
+	}
 
-    public function getPosition(): ?Vector3
-    {
-        return $this->position;
-    }
+	public function getPositionNotNull() : Vector3{
+		return $this->position;
+	}
 
-    public function setPosition(?Vector3 $pos): void
-    {
-        $this->position = $pos;
-    }
+	public function getName() : ?string{
+		return $this->name;
+	}
 
-    public function getPositionNotNull(): Vector3
-    {
-        return $this->position;
-    }
+	public function setPosition(?Vector3 $pos) : void{
+		$this->position = $pos;
+	}
 
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
+	public function setName(?string $name) : void{
+		$this->name = $name;
+	}
 
-    public function setName(?string $name): void
-    {
-        $this->name = $name;
-    }
-
-    public function reset(): void
-    {
-        $this->position = null;
-        $this->name = null;
-    }
+	public function reset() : void{
+		$this->position = null;
+		$this->name = null;
+	}
 }

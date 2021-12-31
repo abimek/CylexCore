@@ -67,7 +67,7 @@ final class NetworkDatabaseHandler
             $callable($this->network_players[$xuid]);
             return;
         }
-        $query = new Query("SELECT * FROM network_players WHERE xuid=?", [$xuid], function ($result) use ($callable) {
+        DatabaseManager::query("SELECT * FROM network_players WHERE xuid=?", 0, [$xuid], function ($result) use ($callable) {
             foreach ($result as $value) {
                 $player = new NetworkPlayer($value["xuid"], $value["username"], $value["ip"], $this->decodeBool($value["ip_locked"]), $this->decodeBool($value["password_locked"]), $value["password"], $value["discord"], $value["youtube"], $value["description"], $this->decodeJson($value["mail"]));
                 if (!isset($this->network_players[$value["xuid"]])) {
@@ -77,7 +77,6 @@ final class NetworkDatabaseHandler
                 }
             }
         });
-        DatabaseManager::query($query);
     }
 
     public function deleteAccount(PlayerSession $session)
@@ -86,7 +85,7 @@ final class NetworkDatabaseHandler
         if ($networkPlayer === null) {
             return;
         }
-        DatabaseManager::emptyQuery("UPDATE network_players SET xuid=?, username=?, ip=?, ip_locked=?, password_locked =?, password=?, discord=?, youtube=?, description=?, mail=? WHERE xuid=?", Query::MAIN_DB, [
+        DatabaseManager::emptyQuery("UPDATE network_players SET xuid=?, username=?, ip=?, ip_locked=?, password_locked=?, password=?, discord=?, youtube=?, description=?, mail=? WHERE xuid=?", Query::MAIN_DB, [
             $networkPlayer->getXuid(),
             $networkPlayer->getUsername(),
             $networkPlayer->getIp(),
@@ -97,7 +96,7 @@ final class NetworkDatabaseHandler
             $networkPlayer->getYoutube(),
             $networkPlayer->getDescription(),
             $this->encodeJson($networkPlayer->getMail()),
-            $networkPlayer->getXuid()
+            $networkPlayer->getXuid(),
         ]);
         unset($this->network_players[$session->getObject()->getXuid()]);
         unset($this->players_by_username[$session->getPlayer()->getName()]);
@@ -105,7 +104,7 @@ final class NetworkDatabaseHandler
 
     public function createAccount(string $xuid, string $username, string $ip, bool $ip_locked, bool $password_locked, string $password, string $discord, string $youtube, string $description, array $mail = [])
     {
-        $query = new Query("INSERT IGNORE INTO network_players(xuid, username, ip, ip_locked, password_locked, password, discord, youtube, description, mail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", [
+        DatabaseManager::query("INSERT IGNORE INTO network_players(xuid, username, ip, ip_locked, password_locked, password, discord, youtube, description, mail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", 0, [
             $xuid,
             $username,
             $ip,
@@ -117,7 +116,7 @@ final class NetworkDatabaseHandler
             $description,
             $this->encodeJson($mail)
         ], function ($result) use ($xuid) {
-            $query = new Query("SELECT * FROM network_players WHERE xuid=?", [$xuid], function ($result) {
+            DatabaseManager::query("SELECT * FROM network_players WHERE xuid=?", 0, [$xuid], function ($result) {
                 foreach ($result as $value) {
                     $player = new NetworkPlayer($value["xuid"], $value["username"], $value["ip"], $this->decodeBool($value["ip_locked"]), $this->decodeBool($value["password_locked"]), $value["password"], $value["discord"], $value["youtube"], $value["description"], $this->decodeJson($value["mail"]));
                     if (!isset($this->network_players[$value["xuid"]])) {
@@ -126,9 +125,7 @@ final class NetworkDatabaseHandler
                     }
                 }
             });
-            DatabaseManager::query($query);
         });
-        DatabaseManager::query($query);
     }
 
     public function saveAccount(string $xuid)
@@ -147,7 +144,7 @@ final class NetworkDatabaseHandler
                     $networkPlayer->getYoutube(),
                     $networkPlayer->getDescription(),
                     $this->encodeJson($networkPlayer->getMail()),
-                    $networkPlayer->getXuid()
+                    $networkPlayer->getXuid(),
                 ]);
                 $username = $networkPlayer->getUsername();
                 unset($this->players_by_username[$username]);
@@ -172,19 +169,7 @@ final class NetworkDatabaseHandler
     {
         foreach ($this->network_players as $xuid => $networkPlayer) {
             if ($networkPlayer instanceof NetworkPlayer) {
-                DatabaseManager::emptyQuery("UPDATE network_players SET xuid=?, username=?, ip=?, ip_locked=?, password_locked=?, password=?, discord=?, youtube=?, description=?, mail=? WHERE xuid=?", Query::MAIN_DB, [
-                    $networkPlayer->getXuid(),
-                    $networkPlayer->getUsername(),
-                    $networkPlayer->getIp(),
-                    $this->encodeBool($networkPlayer->isIpLocked()),
-                    $this->encodeBool($networkPlayer->isPasswordLocked()),
-                    $networkPlayer->getPassword(),
-                    $networkPlayer->getDiscord(),
-                    $networkPlayer->getYoutube(),
-                    $networkPlayer->getDescription(),
-                    $this->encodeJson($networkPlayer->getMail()),
-                    $networkPlayer->getXuid()
-                ]);
+               $networkPlayer->save();
             }
         }
     }

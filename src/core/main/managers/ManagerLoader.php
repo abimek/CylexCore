@@ -11,6 +11,11 @@ final class ManagerLoader
 {
 
     private static $managers = [];
+    private static $loadManagers = [];
+
+    public static function addLoadManager(string $manager){
+        self::$loadManagers[] = $manager;
+    }
 
     public static function loadManagers(): bool
     {
@@ -19,14 +24,8 @@ final class ManagerLoader
         $count++;
         $managers = Managers::getList();
         foreach ($managers as $manager) {
-            try {
-                $count--;
-                self::$managers[$count] = new $manager;
-            } catch (Exception $exception) {
-                var_dump(TextFormat::GOLD . "issue in file ==> $manager");
-                var_dump(TextFormat::RED . "An error has just occured ===> " . $exception);
-                return false;
-            }
+            $count--;
+            self::$managers[$count] = new $manager;
         }
         ksort(self::$managers);
         return true;
@@ -35,8 +34,9 @@ final class ManagerLoader
     private static function unregisterCommands()
     {
         $map = CylexCore::getInstance()->getServer()->getCommandMap();
+        //TODO BETTER IMPLEMENTATION OF THIS
         foreach ($map->getCommands() as $command) {
-            if ($command->getName() === "gamemode" || $command->getName() === "give" || $command->getName() === "spawn" || $command->getName() === "stop" || $command->getName() === "op" || $command->getName() === "whitelist" || $command->getName() === "deop" || $command->getName() === "timings") {
+            if ($command->getName() === "gamemode" || $command->getName() === "give" || $command->getName() === "spawn" || $command->getName() === "stop" || $command->getName() === "op" || $command->getName() === "whitelist" || $command->getName() === "deop") {
                 continue;
             }
             $map->unregister($command);

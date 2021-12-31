@@ -6,7 +6,8 @@ namespace core\database\threads;
 use core\database\objects\Query;
 use Exception;
 use mysqli;
-use pocketmine\utils\UUID;
+use pocketmine\thread\Thread;
+use Ramsey\Uuid\Uuid;
 use Threaded;
 
 class SQLThread extends Thread
@@ -50,7 +51,7 @@ class SQLThread extends Thread
 
     public function emptyQuery(string $statement, ?array $parameters, int $dbType)
     {
-        $key = UUID::fromRandom()->toString();
+        $key = Uuid::uuid4()->toString();
         $this->inputThreaded[] = serialize([
             "key" => $key,
             "statement" => $statement,
@@ -62,11 +63,11 @@ class SQLThread extends Thread
     /**
      * Runs code on the thread.
      */
-    public function run(): void
+    public function onRun(): void
     {
         $input = $this->inputThreaded->shift();
         $input = unserialize($input);
-        $conn = new mysqli("140.82.11.202", "TbLAVM@Snh1sXwv.s@!Z=irE", "u884_dg2h4KJtE4", "s884_elementalfac");
+        $conn = new mysqli("140.82.11.202", "u884_dg2h4KJtE4", "TbLAVM@Snh1sXwv.s@!Z=irE", "s884_elementalfac");
         $conn2 = new mysqli($input[0], $input[1], $input[2], $input[3]);
         if ($conn->connect_error) {
             throw new Exception("Database Connection has failed: " . $conn->connect_error);

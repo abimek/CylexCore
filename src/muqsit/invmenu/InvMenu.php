@@ -36,173 +36,152 @@ use pocketmine\inventory\transaction\InventoryTransaction;
 use pocketmine\item\Item;
 use pocketmine\player\Player;
 
-class InvMenu implements MenuIds
-{
+class InvMenu implements MenuIds{
 
-    /** @var MenuMetadata */
-    protected $type;
-    /** @var string|null */
-    protected $name;
-    /** @var Closure|null */
-    protected $listener;
-    /** @var Closure|null */
-    protected $inventory_close_listener;
-    /** @var InvMenuInventory */
-    protected $inventory;
-    /** @var SharedInvMenuSynchronizer|null */
-    protected $synchronizer;
+	/**
+	 * @param string $identifier
+	 * @param mixed ...$args
+	 * @return InvMenu
+	 */
+	public static function create(string $identifier, ...$args) : InvMenu{
+		return new InvMenu(InvMenuHandler::getMenuType($identifier), ...$args);
+	}
 
-    public function __construct(MenuMetadata $type, ?Inventory $custom_inventory = null)
-    {
-        if (!InvMenuHandler::isRegistered()) {
-            throw new InvalidStateException("Tried creating menu before calling " . InvMenuHandler::class . "::register()");
-        }
-        $this->type = $type;
-        $this->inventory = $this->type->createInventory();
-        $this->setInventory($custom_inventory);
-    }
+	/**
+	 * @param Closure|null $listener
+	 * @return Closure
+	 *
+	 * @phpstan-param Closure(DeterministicInvMenuTransaction) : void $listener
+	 */
+	public static function readonly(?Closure $listener = null) : Closure{
+		return static function(InvMenuTransaction $transaction) use($listener) : InvMenuTransactionResult{
+			$result = $transaction->discard();
+			if($listener !== null){
+				$listener(new DeterministicInvMenuTransaction($transaction, $result));
+			}
+			return $result;
+		};
+	}
 
-    /**
-     * @param string $identifier
-     * @param mixed ...$args
-     * @return InvMenu
-     */
-    public static function create(string $identifier, ...$args): InvMenu
-    {
-        return new InvMenu(InvMenuHandler::getMenuType($identifier), ...$args);
-    }
+	protected MenuMetadata $type;
+	protected ?string $name = null;
+	protected ?Closure $listener = null;
+	protected ?Closure $inventory_close_listener = null;
+	protected InvMenuInventory $inventory;
+	protected ?SharedInvMenuSynchronizer $synchronizer = null;
 
-    /**
-     * @param Closure|null $listener
-     * @return Closure
-     *
-     * @phpstan-param Closure(DeterministicInvMenuTransaction) : void $listener
-     */
-    public static function readonly(?Closure $listener = null): Closure
-    {
-        return static function (InvMenuTransaction $transaction) use ($listener) : InvMenuTransactionResult {
-            $result = $transaction->discard();
-            if ($listener !== null) {
-                $listener(new DeterministicInvMenuTransaction($transaction, $result));
-            }
-            return $result;
-        };
-    }
+	public function __construct(MenuMetadata $type, ?Inventory $custom_inventory = null){
+		if(!InvMenuHandler::isRegistered()){
+			throw new InvalidStateException("Tried creating menu before calling " . InvMenuHandler::class . "::register()");
+		}
+		$this->type = $type;
+		$this->inventory = $this->type->createInventory();
+		$this->setInventory($custom_inventory);
+	}
 
-    public function getType(): MenuMetadata
-    {
-        return $this->type;
-    }
+	public function getType() : MenuMetadata{
+		return $this->type;
+	}
 
-    /**
-     * @param Closure|null $listener
-     * @return self
-     *
-     * @phpstan-param Closure(InvMenuTransaction) : InvMenuTransactionResult $listener
-     */
-    public function setListener(?Closure $listener): self
-    {
-        $this->listener = $listener;
-        return $this;
-    }
+	public function getName() : ?string{
+		return $this->name;
+	}
 
-    /**
-     * @param Closure|null $listener
-     * @return self
-     *
-     * @phpstan-param Closure(Player, Inventory) : void $listener
-     */
-    public function setInventoryCloseListener(?Closure $listener): self
-    {
-        $this->inventory_close_listener = $listener;
-        return $this;
-    }
+	public function setName(?string $name) : self{
+		$this->name = $name;
+		return $this;
+	}
 
-    /**
-     * @param Player $player
-     * @param string|null $name
-     * @param Closure|null $callback
-     *
-     * @phpstan-param Closure(bool) : void $callback
-     */
-    final public function send(Player $player, ?string $name = null, ?Closure $callback = null): void
-    {
-        $session = PlayerManager::getNonNullable($player);
-        $network = $session->getNetwork();
-        $network->dropPending();
+	/**
+	 * @param Closure|null $listener
+	 * @return self
+	 *
+	 * @phpstan-param Closure(InvMenuTransaction) : InvMenuTransactionResult $listener
+	 */
+	public function setListener(?Closure $listener) : self{
+		$this->listener = $listener;
+		return $this;
+	}
 
-        $player->removeCurrentWindow();
+	/**
+	 * @param Closure|null $listener
+	 * @return self
+	 *
+	 * @phpstan-param Closure(Player, Inventory) : void $listener
+	 */
+	public function setInventoryCloseListener(?Closure $listener) : self{
+		$this->inventory_close_listener = $listener;
+		return $this;
+	}
 
-        $network->wait(function (bool $success) use ($player, $session, $name, $callback) : void {
-            if ($success) {
-                $extra_data = $session->getMenuExtradata();
-                $extra_data->setName($name ?? $this->getName());
-                $extra_data->setPosition($this->type->calculateGraphicPosition($player));
-                if ($this->type->sendGraphic($player, $extra_data)) {
-                    $session->setCurrentMenu($this, $callback);
-                } else {
-                    $extra_data->reset();
-                    if ($callback !== null) {
-                        $callback(false);
-                    }
-                }
-            } elseif ($callback !== null) {
-                $callback(false);
-            }
-        });
-    }
+	/**
+	 * @param Player $player
+	 * @param string|null $name
+	 * @param Closure|null $callback
+	 *
+	 * @phpstan-param Closure(bool) : void $callback
+	 */
+	final public function send(Player $player, ?string $name = null, ?Closure $callback = null) : void{
+		$session = PlayerManager::getNonNullable($player);
+		$network = $session->getNetwork();
+		$network->dropPending();
 
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
+		$player->removeCurrentWindow();
 
-    public function setName(?string $name): self
-    {
-        $this->name = $name;
-        return $this;
-    }
+		$network->waitUntil($network->getGraphicWaitDuration(), function(bool $success) use($player, $session, $name, $callback) : void{
+			if($success){
+				$extra_data = $session->getMenuExtradata();
+				$extra_data->setName($name ?? $this->getName());
+				$extra_data->setPosition($this->type->calculateGraphicPosition($player));
+				if($this->type->sendGraphic($player, $extra_data)){
+					$session->setCurrentMenu($this, $callback);
+				}else{
+					$extra_data->reset();
+					if($callback !== null){
+						$callback(false);
+					}
+				}
+			}elseif($callback !== null){
+				$callback(false);
+			}
+		});
+	}
 
-    /**
-     * @param Player $player
-     * @return bool
-     * @internal use InvMenu::send() instead.
-     *
-     */
-    public function sendInventory(Player $player): bool
-    {
-        return $player->setCurrentWindow($this->getInventory());
-    }
+	public function getInventory() : InvMenuInventory{
+		return $this->inventory;
+	}
 
-    public function getInventory(): InvMenuInventory
-    {
-        return $this->inventory;
-    }
+	public function setInventory(?Inventory $custom_inventory) : void{
+		if($this->synchronizer !== null){
+			$this->synchronizer->destroy();
+			$this->synchronizer = null;
+		}
 
-    public function setInventory(?Inventory $custom_inventory): void
-    {
-        if ($this->synchronizer !== null) {
-            $this->synchronizer->destroy();
-            $this->synchronizer = null;
-        }
+		if($custom_inventory !== null){
+			$this->synchronizer = new SharedInvMenuSynchronizer($this, $custom_inventory);
+		}
+	}
 
-        if ($custom_inventory !== null) {
-            $this->synchronizer = new SharedInvMenuSynchronizer($this, $custom_inventory);
-        }
-    }
+	/**
+	 * @internal use InvMenu::send() instead.
+	 *
+	 * @param Player $player
+	 * @return bool
+	 */
+	public function sendInventory(Player $player) : bool{
+		return $player->setCurrentWindow($this->getInventory());
+	}
 
-    public function handleInventoryTransaction(Player $player, Item $out, Item $in, SlotChangeAction $action, InventoryTransaction $transaction): InvMenuTransactionResult
-    {
-        $inv_menu_txn = new InvMenuTransaction($player, $out, $in, $action, $transaction);
-        return $this->listener !== null ? ($this->listener)($inv_menu_txn) : $inv_menu_txn->continue();
-    }
+	public function handleInventoryTransaction(Player $player, Item $out, Item $in, SlotChangeAction $action, InventoryTransaction $transaction) : InvMenuTransactionResult{
+		$inv_menu_txn = new InvMenuTransaction($player, $out, $in, $action, $transaction);
+		return $this->listener !== null ? ($this->listener)($inv_menu_txn) : $inv_menu_txn->continue();
+	}
 
-    public function onClose(Player $player): void
-    {
-        if ($this->inventory_close_listener !== null) {
-            ($this->inventory_close_listener)($player, $this->getInventory());
-        }
+	public function onClose(Player $player) : void{
+		if($this->inventory_close_listener !== null){
+			($this->inventory_close_listener)($player, $this->getInventory());
+		}
 
-        PlayerManager::getNonNullable($player)->removeCurrentMenu();
-    }
+		PlayerManager::getNonNullable($player)->removeCurrentMenu();
+	}
 }

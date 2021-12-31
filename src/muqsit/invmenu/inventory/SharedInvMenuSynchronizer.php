@@ -24,34 +24,26 @@ namespace muqsit\invmenu\inventory;
 use muqsit\invmenu\InvMenu;
 use pocketmine\inventory\Inventory;
 
-class SharedInvMenuSynchronizer
-{
+class SharedInvMenuSynchronizer{
 
-    /** @var Inventory */
-    protected $inventory;
+	protected Inventory $inventory;
+	protected SharedInventorySynchronizer $synchronizer;
+	protected SharedInventoryNotifier $notifier;
 
-    /** @var SharedInventorySynchronizer */
-    protected $synchronizer;
+	public function __construct(InvMenu $menu, Inventory $inventory){
+		$this->inventory = $inventory;
 
-    /** @var SharedInventoryNotifier */
-    protected $notifier;
+		$menu_inventory = $menu->getInventory();
+		$this->synchronizer = new SharedInventorySynchronizer($menu_inventory);
+		$inventory->getListeners()->add($this->synchronizer);
 
-    public function __construct(InvMenu $menu, Inventory $inventory)
-    {
-        $this->inventory = $inventory;
+		$this->notifier = new SharedInventoryNotifier($this->inventory, $this->synchronizer);
+		$menu_inventory->setContents($inventory->getContents());
+		$menu_inventory->getListeners()->add($this->notifier);
+	}
 
-        $menu_inventory = $menu->getInventory();
-        $this->synchronizer = new SharedInventorySynchronizer($menu_inventory);
-        $inventory->getListeners()->add($this->synchronizer);
-
-        $this->notifier = new SharedInventoryNotifier($this->inventory, $this->synchronizer);
-        $menu_inventory->setContents($inventory->getContents());
-        $menu_inventory->getListeners()->add($this->notifier);
-    }
-
-    public function destroy(): void
-    {
-        $this->synchronizer->getSynchronizingInventory()->getListeners()->remove($this->notifier);
-        $this->inventory->getListeners()->remove($this->synchronizer);
-    }
+	public function destroy() : void{
+		$this->synchronizer->getSynchronizingInventory()->getListeners()->remove($this->notifier);
+		$this->inventory->getListeners()->remove($this->synchronizer);
+	}
 }

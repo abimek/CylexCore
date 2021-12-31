@@ -29,6 +29,8 @@ class TextUtil
         "tit",
         "titties",
         "tits",
+        "sex",
+        "dick",
         "§"
     ];
 
@@ -65,7 +67,7 @@ class TextUtil
     {
         $array = explode(" ", $message);
         foreach ($array as $str) {
-            if (strlen(preg_replace('![^A-Z]+!', '', $str)) > 1) {
+            if (strlen(preg_replace('![^A-Z]+!', '', $str)) > 3) {
                 return strtolower($message);
             }
         }
@@ -76,9 +78,8 @@ class TextUtil
     {
         $cuss = false;
         foreach (self::CHAT_FILTERED_WORDS as $word) {
-            $word = " " . $word . " ";
             if (strpos($message, $word) !== false) {
-                $cuss = true;
+                return true;
                 break;
             }
         }

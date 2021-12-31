@@ -13,7 +13,7 @@ use core\network\objects\NetworkPlayer;
 use core\players\objects\PlayerObject;
 use core\players\PlayerManager;
 use pocketmine\player\Player;
-use pocketmine\uuid\UUID;
+use Ramsey\Uuid\Nonstandard\Uuid;
 
 class MailComposeForm extends CustomForm
 {
@@ -63,7 +63,7 @@ class MailComposeForm extends CustomForm
                     $name = $player->getName();
                     $xuid = $object->getXuid();
                     NetworkManager::getNetworkPlayerDBHandler()->loadAccountAndCallable($xuid, function (NetworkPlayer $nplayer) use ($data, $name) {
-                        $mail = new Mail(UUID::fromRandom()->toString(), time(), $data[1], $data[4], $name);
+                        $mail = new Mail(Uuid::uuid4()->toString(), time(), $data[1], $data[4], $name);
                         $nplayer->addMail($mail->encodeData());
                     });
                     $player->sendMessage(Message::PREFIX . "Successfully sent mail to " . TextFormat::LIGHT_PURPLE . $data[0]);

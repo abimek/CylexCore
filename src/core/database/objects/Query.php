@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 namespace core\database\objects;
 
-use pocketmine\utils\UUID;
-
+use Ramsey\Uuid\Uuid;
 class Query
 {
 
@@ -40,7 +39,7 @@ class Query
         $this->parameters = $parameters;
         $this->statement = $statement;
         $this->callable = $callable;
-        $this->key = UUID::fromRandom()->toString();
+        $this->key = Uuid::uuid4()->toString();
         $this->db = $type;
     }
 

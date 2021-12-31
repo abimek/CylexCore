@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace core;
 
 use core\main\managers\ManagerLoader;
+use CortexPE\Commando\PacketHooker;
 use muqsit\invmenu\InvMenuHandler;
 use pocketmine\plugin\PluginBase;
 use xenialdan\apibossbar\PacketListener;
@@ -33,6 +34,9 @@ class CylexCore extends PluginBase
     {
         if (!InvMenuHandler::isRegistered()) {
             InvMenuHandler::register($this);
+        }
+        if (!PacketHooker::isRegistered()){
+            PacketHooker::register($this);
         }
         if (!PacketListener::isRegistered()) {
             PacketListener::register($this);

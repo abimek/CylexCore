@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace core\players\objects;
 
+use core\database\DatabaseManager;
+use core\database\objects\Query;
+use core\players\database\PlayerDatabaseHandler;
+
 class PlayerObject
 {
 
@@ -62,6 +66,7 @@ class PlayerObject
     public function setRank(string $identifier)
     {
         $this->rank = $identifier;
+        $this->save();
     }
 
     /**
@@ -86,6 +91,21 @@ class PlayerObject
     public function addBanCount(): void
     {
         $this->ban_count++;
+        $this->save();
+    }
+
+    public function save(){
+        $t = PlayerDatabaseHandler::getTableName();
+        $playerObject = $this;
+        DatabaseManager::emptyQuery("UPDATE {$t} SET xuid=?, username=?, ip=?, rank=?, ban_count=?, ban_data=? WHERE xuid=?", Query::SERVER_DB, [
+            $playerObject->getXuid(),
+            $playerObject->getUsername(),
+            $playerObject->getIp(),
+            $playerObject->getRank(),
+            $playerObject->getBanCount(),
+            $playerObject->getBanData()->encodeData(),
+            $playerObject->getXuid()
+        ]);
     }
 
     /**

@@ -27,19 +27,27 @@ final class PlayerDatabaseHandler
     private $players_by_username = [];
     private $table_name = "";
 
+    private static $instance;
+
+    private static $waitingCallables = [];
+
     private $queryLists;
 
     public function __construct()
     {
         $this->init();
+        self::$instance = $this;
     }
 
     public function init()
     {
         $this->table_name = CylexCore::getInstance()->getConfig()->get("PlayerTableName");
         $t = $this->table_name;
-        DatabaseManager::emptyQuery("CREATE TABLE IF NOT EXISTS {$t}(xuid VARCHAR(36) PRIMARY KEY, username TEXT, ip TEXT, rank TEXT, ban_count INTEGER, ban_data TEXT)", Query::SERVER_DB, null);
+        DatabaseManager::emptyQuery("CREATE TABLE IF NOT EXISTS {$t}(xuid VARCHAR(36) PRIMARY KEY, username TEXT, ip TEXT, rank TEXT, ban_count INTEGER, ban_data TEXT)", Query::SERVER_DB, []);
+    }
 
+    public static function getTableName(): string {
+        return self::$instance->table_name;
     }
 
     public function getPlayerObjects(): array
@@ -50,16 +58,19 @@ final class PlayerDatabaseHandler
     /**
      * @param Player $player
      */
-    public function createObject(Player $player)
+    public function createObject(Player $player, ?callable $callable = null)
     {
         $xuid = $player->getXuid();
         $ip = $player->getNetworkSession()->getIp();
         $username = $player->getName();
         if (isset($this->players[intval($xuid)])) {
             NetworkManager::getNetworkPlayerDBHandler()->createAccount($xuid, $username, $ip, false, false, "", "", "", "", []);
+            if ($callable !== null){
+                $callable($this->players[intval($xuid)]);
+            }
             return;
         }
-        $query = new Query("SELECT * FROM {$this->table_name} WHERE xuid=?", [$xuid], function ($results) use ($xuid, $username, $ip, $player) {
+        DatabaseManager::query("SELECT * FROM {$this->table_name} WHERE xuid=?", Query::SERVER_DB, [$xuid], function ($results) use ($xuid, $username, $ip, $player, $callable) {
             foreach ($results as $player_data) {
                 if (isset($player_data["ban_data"])) {
                     $ban_data = $this->decodeJson($player_data["ban_data"]);
@@ -75,6 +86,9 @@ final class PlayerDatabaseHandler
                 }
                 $playerObject = new PlayerObject($banObject, $xuid, $username, $ip, $rank, $ban_count);
                 $this->players[intval($xuid)] = $playerObject;
+                if ($callable !== null) {
+                    $callable($this->players[intval($xuid)]);
+                }
                 $this->players_by_username[$username] = $xuid;
                 NetworkManager::getNetworkPlayerDBHandler()->createAccount($xuid, $username, $ip, false, false, "", "", "", "", []);
                 return;
@@ -97,8 +111,7 @@ final class PlayerDatabaseHandler
             ]);
             AliasHandler::initAliases($this->players[$xuid]);
             NetworkManager::getNetworkPlayerDBHandler()->createAccount($xuid, $username, $ip, false, false, "", "", "", "", []);
-        }, Query::SERVER_DB);
-        DatabaseManager::query($query);
+        });
     }
 
 
@@ -108,7 +121,7 @@ final class PlayerDatabaseHandler
             $callable($this->players[$this->players_by_username[$username]]);
             return;
         }
-        $query = new Query("SELECT * FROM {$this->table_name} WHERE username=?", [$username], function ($result) use ($callable) {
+        DatabaseManager::query("SELECT * FROM {$this->table_name} WHERE username=?", Query::SERVER_DB, [$username], function ($result) use ($callable) {
             foreach ($result as $player_data) {
                 $xuid = $player_data["xuid"];
                 $ban_data = $this->decodeJson($player_data["ban_data"]);
@@ -120,8 +133,7 @@ final class PlayerDatabaseHandler
                 return;
             }
             $callable(null);
-        }, Query::SERVER_DB);
-        DatabaseManager::query($query);
+        });
     }
 
     /**
@@ -134,7 +146,7 @@ final class PlayerDatabaseHandler
         if (isset($this->players[$xuid])) {
             $callable($this->players[$xuid]);
         }
-        $query = new Query("SELECT * FROM {$this->table_name} WHERE xuid=?", [$xuid], function ($result) use ($callable, $xuid) {
+        DatabaseManager::query("SELECT * FROM {$this->table_name} WHERE xuid=?", Query::SERVER_DB, [$xuid], function ($result) use ($callable, $xuid) {
             foreach ($result as $player_data) {
                 $xuid = $player_data["xuid"];
                 $ban_data = $this->decodeJson($player_data["ban_data"]);
@@ -145,12 +157,11 @@ final class PlayerDatabaseHandler
                 $callable($playerObject);
                 return;
             }
-            $playerObject = $this->players[$xuid];
+            $playerObject = $this->players[intval($xuid)];
             if ($playerObject instanceof PlayerObject) {
                 $callable($playerObject);
             }
-        }, Query::SERVER_DB);
-        DatabaseManager::query($query);
+        });
     }
 
     public function savePlayer(PlayerObject $object)
@@ -170,23 +181,15 @@ final class PlayerDatabaseHandler
         $t = $this->table_name;
         foreach ($this->players as $xuid => $playerObject) {
             if ($playerObject instanceof PlayerObject) {
-                DatabaseManager::emptyQuery("INSERT IGNORE INTO {$t}(xuid, username, ip, rank, ban_count, ban_data) VALUES (?, ?, ?, ?, ?, ?);", Query::SERVER_DB, [
+                $playerObject->save();
+          /**      DatabaseManager::emptyQuery("INSERT IGNORE INTO {$t}(xuid, username, ip, rank, ban_count, ban_data) VALUES (?, ?, ?, ?, ?, ?);", Query::SERVER_DB, [
                     $playerObject->getXuid(),
                     $playerObject->getUsername(),
                     $playerObject->getIp(),
                     $playerObject->getRank(),
                     $playerObject->getBanCount(),
                     $playerObject->getBanData()->encodeData()
-                ]);
-                DatabaseManager::emptyQuery("UPDATE {$t} SET xuid=?, username=?, ip=?, rank=?, ban_count=?, ban_data=? WHERE xuid=?", Query::SERVER_DB, [
-                    $playerObject->getXuid(),
-                    $playerObject->getUsername(),
-                    $playerObject->getIp(),
-                    $playerObject->getRank(),
-                    $playerObject->getBanCount(),
-                    $playerObject->getBanData()->encodeData(),
-                    $playerObject->getXuid()
-                ]);
+                ]);**/
             }
         }
     }

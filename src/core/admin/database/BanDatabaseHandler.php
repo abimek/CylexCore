@@ -78,7 +78,7 @@ class BanDatabaseHandler
             $callable(self::$bans[$xuid]);
             return;
         }
-        $query = new Query("SELECT * FROM bans WHERE xuid=?", [
+        DatabaseManager::query("SELECT * FROM bans WHERE xuid=?", 0, [
             $xuid
         ], function ($result) use ($callable, $xuid) {
             foreach ($result as $row) {
@@ -89,7 +89,6 @@ class BanDatabaseHandler
                 $callable(self::$bans[$xuid]);
             }
         });
-        DatabaseManager::query($query);
     }
 
     /**
@@ -133,19 +132,13 @@ class BanDatabaseHandler
     {
         foreach (self::$bans as $ban) {
             if ($ban instanceof Ban) {
-                DatabaseManager::emptyQuery("INSERT IGNORE INTO bans(xuid, username, reason, banner_name) VALUES (?, ?, ?, ?);", Query::MAIN_DB, [
+              /**  DatabaseManager::emptyQuery("INSERT IGNORE INTO bans(xuid, username, reason, banner_name) VALUES (?, ?, ?, ?);", Query::MAIN_DB, [
                     $ban->getXuid(),
                     $ban->getUsername(),
                     $ban->getReason(),
                     $ban->getBannerName()
-                ]);
-                DatabaseManager::emptyQuery("UPDATE bans SET xuid=?, username=?, reason=?, banner_name=? WHERE xuid=?", Query::MAIN_DB, [
-                    $ban->getXuid(),
-                    $ban->getUsername(),
-                    $ban->getReason(),
-                    $ban->getBannerName(),
-                    $ban->getXuid()
-                ]);
+                ]);**/
+              $ban->save();
             }
         }
     }

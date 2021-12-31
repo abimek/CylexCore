@@ -26,60 +26,48 @@ use muqsit\invmenu\session\MenuExtradata;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
 
-abstract class MenuMetadata
-{
+abstract class MenuMetadata{
 
-    /** @var string */
-    protected $identifier;
+	protected string $identifier;
+	protected int $size;
+	protected int $window_type;
 
-    /** @var int */
-    protected $size;
+	public function __construct(string $identifier, int $size, int $window_type){
+		$this->identifier = $identifier;
+		$this->size = $size;
+		$this->window_type = $window_type;
+	}
 
-    /** @var int */
-    protected $window_type;
+	public function getIdentifier() : string{
+		return $this->identifier;
+	}
 
-    public function __construct(string $identifier, int $size, int $window_type)
-    {
-        $this->identifier = $identifier;
-        $this->size = $size;
-        $this->window_type = $window_type;
-    }
+	public function getSize() : int{
+		return $this->size;
+	}
 
-    public function getIdentifier(): string
-    {
-        return $this->identifier;
-    }
+	public function getWindowType() : int{
+		return $this->window_type;
+	}
 
-    public function getWindowType(): int
-    {
-        return $this->window_type;
-    }
+	public function createInventory() : InvMenuInventory{
+		return new InvMenuInventory($this->getSize());
+	}
 
-    public function createInventory(): InvMenuInventory
-    {
-        return new InvMenuInventory($this->getSize());
-    }
+	protected function calculateGraphicOffset(Player $player) : Vector3{
+		$offset = $player->getDirectionVector();
+		$size = $player->size;
+		$offset->x *= -(1 + $size->getWidth());
+		$offset->y *= -(1 + $size->getHeight());
+		$offset->z *= -(1 + $size->getWidth());
+		return $offset;
+	}
 
-    public function getSize(): int
-    {
-        return $this->size;
-    }
+	public function calculateGraphicPosition(Player $player) : Vector3{
+		return $player->getPosition()->addVector($this->calculateGraphicOffset($player))->floor();
+	}
 
-    public function calculateGraphicPosition(Player $player): Vector3
-    {
-        return $player->getPosition()->addVector($this->calculateGraphicOffset($player))->floor();
-    }
+	abstract public function sendGraphic(Player $player, MenuExtradata $metadata) : bool;
 
-    protected function calculateGraphicOffset(Player $player): Vector3
-    {
-        $offset = $player->getDirectionVector();
-        $offset->x *= -(1 + $player->width);
-        $offset->y *= -(1 + $player->height);
-        $offset->z *= -(1 + $player->width);
-        return $offset;
-    }
-
-    abstract public function sendGraphic(Player $player, MenuExtradata $metadata): bool;
-
-    abstract public function removeGraphic(Player $player, MenuExtradata $extradata): void;
+	abstract public function removeGraphic(Player $player, MenuExtradata $extradata) : void;
 }

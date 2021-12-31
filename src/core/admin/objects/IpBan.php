@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace core\admin\objects;
 
+use core\database\DatabaseManager;
+use core\database\objects\Query;
+
 class IpBan extends Ban
 {
 
@@ -17,5 +20,17 @@ class IpBan extends Ban
     public function getIp(): string
     {
         return $this->ip;
+    }
+
+    public function save(){
+        $ipban = $this;
+        DatabaseManager::emptyQuery("UPDATE bans SET ip=?, xuid=?, username=?, reason=?, banner_name=? WHERE xuid=?", Query::SERVER_DB, [
+            $ipban->getIp(),
+            $ipban->getXuid(),
+            $ipban->getUsername(),
+            $ipban->getReason(),
+            $ipban->getBannerName(),
+            $ipban->getXuid()
+        ]);
     }
 }

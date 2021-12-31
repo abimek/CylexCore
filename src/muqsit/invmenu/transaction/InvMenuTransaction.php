@@ -26,87 +26,67 @@ use pocketmine\inventory\transaction\InventoryTransaction;
 use pocketmine\item\Item;
 use pocketmine\player\Player;
 
-class InvMenuTransaction
-{
+class InvMenuTransaction{
 
-    /** @var Player */
-    private $player;
+	private Player $player;
+	private Item $out;
+	private Item $in;
+	private SlotChangeAction $action;
+	private InventoryTransaction $transaction;
 
-    /** @var Item */
-    private $out;
+	public function __construct(Player $player, Item $out, Item $in, SlotChangeAction $action, InventoryTransaction $transaction){
+		$this->player = $player;
+		$this->out = $out;
+		$this->in = $in;
+		$this->action = $action;
+		$this->transaction = $transaction;
+	}
 
-    /** @var Item */
-    private $in;
+	public function getPlayer() : Player{
+		return $this->player;
+	}
 
-    /** @var SlotChangeAction */
-    private $action;
+	public function getOut() : Item{
+		return $this->out;
+	}
 
-    /** @var InventoryTransaction */
-    private $transaction;
+	public function getIn() : Item{
+		return $this->in;
+	}
 
-    public function __construct(Player $player, Item $out, Item $in, SlotChangeAction $action, InventoryTransaction $transaction)
-    {
-        $this->player = $player;
-        $this->out = $out;
-        $this->in = $in;
-        $this->action = $action;
-        $this->transaction = $transaction;
-    }
+	/**
+	 * Returns the item that was clicked / taken out of the inventory.
+	 *
+	 * @link InvMenuTransaction::getOut()
+	 * @return Item
+	 */
+	public function getItemClicked() : Item{
+		return $this->getOut();
+	}
 
-    public function getPlayer(): Player
-    {
-        return $this->player;
-    }
+	/**
+	 * Returns the item that an item was clicked with / placed in the inventory.
+	 *
+	 * @link InvMenuTransaction::getIn()
+	 * @return Item
+	 */
+	public function getItemClickedWith() : Item{
+		return $this->getIn();
+	}
 
-    /**
-     * Returns the item that was clicked / taken out of the inventory.
-     *
-     * @return Item
-     * @link InvMenuTransaction::getOut()
-     */
-    public function getItemClicked(): Item
-    {
-        return $this->getOut();
-    }
+	public function getAction() : SlotChangeAction{
+		return $this->action;
+	}
 
-    public function getOut(): Item
-    {
-        return $this->out;
-    }
+	public function getTransaction() : InventoryTransaction{
+		return $this->transaction;
+	}
 
-    /**
-     * Returns the item that an item was clicked with / placed in the inventory.
-     *
-     * @return Item
-     * @link InvMenuTransaction::getIn()
-     */
-    public function getItemClickedWith(): Item
-    {
-        return $this->getIn();
-    }
+	public function continue() : InvMenuTransactionResult{
+		return new InvMenuTransactionResult(false);
+	}
 
-    public function getIn(): Item
-    {
-        return $this->in;
-    }
-
-    public function getAction(): SlotChangeAction
-    {
-        return $this->action;
-    }
-
-    public function getTransaction(): InventoryTransaction
-    {
-        return $this->transaction;
-    }
-
-    public function continue(): InvMenuTransactionResult
-    {
-        return new InvMenuTransactionResult(false);
-    }
-
-    public function discard(): InvMenuTransactionResult
-    {
-        return new InvMenuTransactionResult(true);
-    }
+	public function discard() : InvMenuTransactionResult{
+		return new InvMenuTransactionResult(true);
+	}
 }

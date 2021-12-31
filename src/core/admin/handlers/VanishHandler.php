@@ -53,7 +53,7 @@ class VanishHandler
                     $session->getPlayer()->sendMessage(Message::PREFIX . $player->getName() . " vanished!");
                     continue;
                 }
-                $session->getPlayer()->showPlayer($player);
+                $session->getPlayer()->hidePlayer($player);
             }
         }
     }

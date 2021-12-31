@@ -21,7 +21,7 @@ class NetworkPlayerListener extends BaseListener
 
     public function onLogin(PlayerLoginEvent $event)
     {
-        PlayerManager::getDatabaseHandler()->getPlayerObject($event->getPlayer()->getXuid(), function ($object) use ($event) {
+       /** PlayerManager::getDatabaseHandler()->getPlayerObject($event->getPlayer()->getXuid(), function ($object) use ($event) {
             if ($object instanceof PlayerObject) {
                 $player = $event->getPlayer();
                 //$verified = NetworkManager::getNetworkPlayerDBHandler()->veryifyLogin($object);
@@ -44,7 +44,7 @@ class NetworkPlayerListener extends BaseListener
             } else {
                 $event->getPlayer()->kick(Message::PREFIX . "failed to register account, please try again.");
             }
-        });
+        });**/
     }
 
     private function sendVerifyForm(Player $player, EffectManager $manager)

@@ -101,6 +101,5 @@ final class RankManager extends Manager
 
     protected function close(): void
     {
-
     }
 }

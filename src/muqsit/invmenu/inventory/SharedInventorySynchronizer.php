@@ -25,29 +25,23 @@ use pocketmine\inventory\Inventory;
 use pocketmine\inventory\InventoryListener;
 use pocketmine\item\Item;
 
-class SharedInventorySynchronizer implements InventoryListener
-{
+class SharedInventorySynchronizer implements InventoryListener{
 
-    /** @var InvMenuInventory */
-    protected $inventory;
+	protected InvMenuInventory $inventory;
 
-    public function __construct(InvMenuInventory $inventory)
-    {
-        $this->inventory = $inventory;
-    }
+	public function __construct(InvMenuInventory $inventory){
+		$this->inventory = $inventory;
+	}
 
-    public function getSynchronizingInventory(): InvMenuInventory
-    {
-        return $this->inventory;
-    }
+	public function getSynchronizingInventory() : InvMenuInventory{
+		return $this->inventory;
+	}
 
-    public function onContentChange(Inventory $inventory, array $old_contents): void
-    {
-        $this->inventory->setContents($inventory->getContents());
-    }
+	public function onContentChange(Inventory $inventory, array $old_contents) : void{
+		$this->inventory->setContents($inventory->getContents());
+	}
 
-    public function onSlotChange(Inventory $inventory, int $slot, Item $old_item): void
-    {
-        $this->inventory->setItem($slot, $inventory->getItem($slot));
-    }
+	public function onSlotChange(Inventory $inventory, int $slot, Item $old_item) : void{
+		$this->inventory->setItem($slot, $inventory->getItem($slot));
+	}
 }

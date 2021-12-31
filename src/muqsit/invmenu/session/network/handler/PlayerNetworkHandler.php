@@ -24,8 +24,7 @@ namespace muqsit\invmenu\session\network\handler;
 use Closure;
 use muqsit\invmenu\session\network\NetworkStackLatencyEntry;
 
-interface PlayerNetworkHandler
-{
+interface PlayerNetworkHandler{
 
-    public function createNetworkStackLatencyEntry(Closure $then): NetworkStackLatencyEntry;
+	public function createNetworkStackLatencyEntry(Closure $then) : NetworkStackLatencyEntry;
 }

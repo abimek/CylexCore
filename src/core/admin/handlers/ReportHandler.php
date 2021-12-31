@@ -5,14 +5,14 @@ namespace core\admin\handlers;
 
 use core\admin\database\ReportDatabaseHandler;
 use core\admin\objects\Report;
-use pocketmine\uuid\UUID;
+use Ramsey\Uuid\Uuid;
 
 class ReportHandler
 {
 
     public static function createReport(string $reporter, string $reason, string $reported_person)
     {
-        $report = new Report(UUID::fromRandom()->toString(), $reported_person, $reason, $reported_person, time());
+        $report = new Report(Uuid::uuid4()->toString(), $reporter, $reason, $reported_person, time());
         ReportDatabaseHandler::addReport($report, false);
     }
 

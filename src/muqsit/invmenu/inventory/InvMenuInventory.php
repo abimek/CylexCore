@@ -24,11 +24,9 @@ namespace muqsit\invmenu\inventory;
 use pocketmine\block\inventory\BlockInventory;
 use pocketmine\world\Position;
 
-class InvMenuInventory extends BlockInventory
-{
+class InvMenuInventory extends BlockInventory{
 
-    public function __construct(int $size)
-    {
-        parent::__construct(new Position(0, 0, 0, null), $size);
-    }
+	public function __construct(int $size){
+		parent::__construct(new Position(0, 0, 0, null), $size);
+	}
 }

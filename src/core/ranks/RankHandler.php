@@ -18,7 +18,7 @@ class RankHandler
         if ($session != null) {
             $session->setRank($rank->getIdentifier());
         }
-        $event = new PlayerRankChangeEvent($object);
+        $event = new PlayerRankChangeEvent($object, $rank);
         $event->call();
     }
 

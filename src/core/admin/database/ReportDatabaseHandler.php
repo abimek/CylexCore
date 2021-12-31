@@ -19,16 +19,14 @@ class ReportDatabaseHandler
 
     private function init()
     {
-        $query = new Query("CREATE TABLE IF NOT EXISTS reports(id VARCHAR(36) PRIMARY KEY, reporter TEXT, reason TEXT, reported_person TEXT, unix_time INTEGER);", null, function ($result) {
-            $query = new Query("SELECT * FROM reports", [], function ($result) {
+        DatabaseManager::query("CREATE TABLE IF NOT EXISTS reports(id VARCHAR(36) PRIMARY KEY, reporter TEXT, reason TEXT, reported_person TEXT, unix_time INTEGER);", 0, [], function ($result) {
+            DatabaseManager::query("SELECT * FROM reports", 0, [], function ($result) {
                 foreach ($result as $row) {
                     $report = new Report($row["id"], $row["reporter"], $row["reason"], $row["reported_person"], $row["unix_time"]);
                     self::$reports[$row["id"]] = $report;
                 }
             });
-            DatabaseManager::query($query);
         });
-        DatabaseManager::query($query);
     }
 
     /**
@@ -102,21 +100,14 @@ class ReportDatabaseHandler
     {
         foreach (self::$reports as $report) {
             if ($report instanceof Report) {
-                DatabaseManager::emptyQuery("INSERT IGNORE INTO reports(id, reporter, reason, reported_person, unix_time) VALUES (?, ?, ?, ?, ?);", Query::SERVER_DB, [
+              /**  DatabaseManager::emptyQuery("INSERT IGNORE INTO reports(id, reporter, reason, reported_person, unix_time) VALUES (?, ?, ?, ?, ?);", Query::SERVER_DB, [
                     $report->getId(),
                     $report->getReporter(),
                     $report->getReason(),
                     $report->getReportedPerson(),
                     $report->getTime()
-                ]);
-                DatabaseManager::emptyQuery("UPDATE reports SET id=?, reporter=?, reason=?, reported_person=?, unix_time=? WHERE id=?", Query::SERVER_DB, [
-                    $report->getId(),
-                    $report->getReporter(),
-                    $report->getReason(),
-                    $report->getReportedPerson(),
-                    $report->getTime(),
-                    $report->getId()
-                ]);
+                ]);**/
+                $report->save();
             }
         }
     }

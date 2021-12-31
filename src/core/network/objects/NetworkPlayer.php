@@ -3,8 +3,16 @@ declare(strict_types=1);
 
 namespace core\network\objects;
 
+use core\database\DatabaseManager;
+use core\database\objects\Query;
+use core\main\data\formatter\BooleanFormatter;
+use core\main\data\formatter\JsonFormatter;
+
 class NetworkPlayer
 {
+
+    use JsonFormatter;
+    use BooleanFormatter;
 
     private $xuid;
     private $username;
@@ -49,6 +57,7 @@ class NetworkPlayer
     public function setIp(string $value): void
     {
         $this->ip = $value;
+        $this->save();
     }
 
     public function isIpLocked(): bool
@@ -59,6 +68,7 @@ class NetworkPlayer
     public function setIpLocked(bool $value): void
     {
         $this->ip_locked = $value;
+        $this->save();
     }
 
     public function isPasswordLocked(): bool
@@ -69,6 +79,7 @@ class NetworkPlayer
     public function setPasswordLocked(bool $value): void
     {
         $this->password_locked = $value;
+        $this->save();
     }
 
     public function getPassword(): string
@@ -79,6 +90,7 @@ class NetworkPlayer
     public function setPassword(string $value): void
     {
         $this->password = md5($value);
+        $this->save();
     }
 
     //----------------------------------------------
@@ -91,6 +103,7 @@ class NetworkPlayer
     public function setDiscord(string $value): void
     {
         $this->discord = $value;
+        $this->save();
     }
 
     public function getYoutube(): string
@@ -101,6 +114,7 @@ class NetworkPlayer
     public function setYoutube(string $value): void
     {
         $this->youtube = $value;
+        $this->save();
     }
 
     public function getDescription(): string
@@ -111,6 +125,7 @@ class NetworkPlayer
     public function setDescription(string $value): void
     {
         $this->description = $value;
+        $this->save();
     }
 
     public function getMail(): array
@@ -121,6 +136,7 @@ class NetworkPlayer
     public function addMail(array $value): void
     {
         $this->mail[$value[0]] = $value;
+        $this->save();
     }
 
     public function removeMail(string $id): void
@@ -128,5 +144,23 @@ class NetworkPlayer
         if (isset($this->mail[$id])) {
             unset($this->mail[$id]);
         }
+        $this->save();
+    }
+
+    public function save(){
+        $networkPlayer = $this;
+        DatabaseManager::emptyQuery("UPDATE network_players SET xuid=?, username=?, ip=?, ip_locked=?, password_locked=?, password=?, discord=?, youtube=?, description=?, mail=? WHERE xuid=?", Query::MAIN_DB, [
+            $networkPlayer->getXuid(),
+            $networkPlayer->getUsername(),
+            $networkPlayer->getIp(),
+            $this->encodeBool($networkPlayer->isIpLocked()),
+            $this->encodeBool($networkPlayer->isPasswordLocked()),
+            $networkPlayer->getPassword(),
+            $networkPlayer->getDiscord(),
+            $networkPlayer->getYoutube(),
+            $networkPlayer->getDescription(),
+            $this->encodeJson($networkPlayer->getMail()),
+            $networkPlayer->getXuid()
+        ]);
     }
 }

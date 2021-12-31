@@ -7,19 +7,28 @@ use core\CylexCore;
 use core\database\objects\Query;
 use core\database\tasks\SQLCollectionTask;
 use core\database\threads\SQLThread;
-use core\HomesLoader;
-use core\Loader;
+use poggit\libasynql\DataConnector;
+use poggit\libasynql\libasynql;
 
 final class DatabaseManager
 {
 
     private static $queries = [];
+
     /**
-     * @var SQLThread
+     * @var DataConnector
      */
+    public $database;
+
+    /**
+     * @var DataConnector
+     */
+    public $database2;
+
     private static $sqlThread;
 
     private static $instance;
+
 
     public function __construct()
     {
@@ -28,23 +37,91 @@ final class DatabaseManager
 
     protected function init(): void
     {
-        $data = CylexCore::getInstance()->getConfig();
-        $host = $data->get("Host");
-        $password = $data->get("Password");
-        $username = $data->get("Username");
-        $dbname = $data->get("DbName");
         self::$instance = $this;
-        self::$sqlThread = new SQLThread([$host, $password, $username, $dbname]);
-        CylexCore::getInstance()->getScheduler()->scheduleRepeatingTask(new SQLCollectionTask(self::$sqlThread), 1);
+        $this->database = libasynql::create(CylexCore::getInstance(), CylexCore::getInstance()->getConfig()->get("database"), [
+            "mysql" => "mysql.sql"
+        ]);
+        $this->database2 = libasynql::create(CylexCore::getInstance(), CylexCore::getInstance()->getConfig()->get("database2"), [
+           "mysql" => "mysql.sql"
+        ]);
+        //self::$sqlThread = new SQLThread([$host, $password, $username, $dbname]);
+       // CylexCore::getInstance()->getScheduler()->scheduleRepeatingTask(new SQLCollectionTask(self::$sqlThread), 1);
     }
 
-    /**
-     * @param Query $query
-     */
-    public static function query(Query $query)
-    {
-        self::$queries[$query->getKey()] = $query;
-        self::getThread()->query($query);
+    public static function getInstance(): DatabaseManager{
+        return self::$instance;
+    }
+
+    public static function query(string $query, int $dbType = 0, ?array $parameters = [], ?callable $callable = null){
+        if ($parameters === null){
+            $parameters = [];
+        }
+        $type = strtok($query, " ");
+        switch ($type){
+            case "INSERT":
+                if (!is_array($parameters)){
+                    throw new \Exception("Unable to query, $parameters is lot an array on insert!");
+                }
+                if ($dbType === 0){
+                    self::getInstance()->database->executeInsertRaw($query, $parameters, $callable);
+                }else{
+                    self::getInstance()->database2->executeInsertRaw($query, $parameters, $callable);
+                }
+                return;
+            case "SELECT":
+                if (!is_array($parameters)){
+                    throw new \Exception("Unable to query, $parameters is lot an array on select!");
+                }
+                if ($dbType === 0){
+                    self::getInstance()->database->executeSelectRaw($query, $parameters, $callable);
+                }else{
+                    self::getInstance()->database2->executeSelectRaw($query, $parameters, $callable);
+                }
+                return;
+            case "CREATE":
+                if (!is_array($parameters)){
+                    throw new \Exception("Unable to query, $parameters is lot an array on create!");
+                }
+                if ($dbType === 0){
+                    self::getInstance()->database->executeGenericRaw($query, $parameters, $callable);
+                }else{
+                    self::getInstance()->database2->executeGenericRaw($query, $parameters, $callable);
+                }
+                return;
+            case "DELETE":
+                if (!is_array($parameters)){
+                    throw new \Exception("Unable to query, $parameters is lot an array on delete!");
+                }
+                if ($dbType === 0){
+                    self::getInstance()->database->executeGenericRaw($query, $parameters, $callable);
+                }else{
+                    self::getInstance()->database2->executeGenericRaw($query, $parameters, $callable);
+                }
+                return;
+            case "UPDATE":
+                if (!is_array($parameters)){
+                    throw new \Exception("Unable to query, $parameters is lot an array on update!");
+                }
+                if ($dbType === 0){
+                    self::getInstance()->database->executeChangeRaw($query, $parameters, $callable);
+                }else{
+                    self::getInstance()->database2->executeChangeRaw($query, $parameters, $callable);
+                }
+                return;
+            case "DROP":
+                if (!is_array($parameters)){
+                    throw new \Exception("Unable to query, $parameters is lot an array on drop!");
+                }
+                if ($dbType === 0){
+                    self::getInstance()->database->executeGenericRaw($query, $parameters, $callable);
+                }else{
+                    self::getInstance()->database2->executeGenericRaw($query, $parameters, $callable);
+                }
+                return;
+        }
+        var_dump("uncomplete query");
+        var_dump($type);
+        var_dump($query);
     }
 
     public static function getThread(): SQLThread
@@ -52,9 +129,9 @@ final class DatabaseManager
         return self::$sqlThread;
     }
 
-    public static function emptyQuery(string $statement, $dbType = 0, ?array $parameters = null)
+    public static function emptyQuery(string $statement, $dbType = 0, ?array $parameters = [])
     {
-        self::getThread()->emptyQuery($statement, $parameters, $dbType);
+        self::query($statement, $dbType, $parameters);
     }
 
     /**
@@ -77,6 +154,11 @@ final class DatabaseManager
 
     public static function close(): void
     {
-        self::$sqlThread->close();
+        //self::$sqlThread->close();
+    }
+
+    public static function realClose(): void {
+        if (isset(self::getInstance()->database)) self::getInstance()->database->close();
+        if (isset(self::getInstance()->database2)) self::getInstance()->database2->close();
     }
 }

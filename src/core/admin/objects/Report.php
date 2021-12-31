@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace core\admin\objects;
 
+use core\database\DatabaseManager;
+use core\database\objects\Query;
 use core\main\data\formatter\JsonFormatter;
 
 class Report
@@ -54,6 +56,7 @@ class Report
     public function setBeingHandled(bool $value)
     {
         $this->being_handeled = $value;
+        $this->save();
     }
 
     public function getTime(): int
@@ -70,5 +73,17 @@ class Report
             "time" => $this->time
         ];
         return $this->encodeJson($data);
+    }
+
+    public function save(){
+        $report = $this;
+        DatabaseManager::emptyQuery("UPDATE reports SET id=?, reporter=?, reason=?, reported_person=?, unix_time=? WHERE id=?", Query::SERVER_DB, [
+            $report->getId(),
+            $report->getReporter(),
+            $report->getReason(),
+            $report->getReportedPerson(),
+            $report->getTime(),
+            $report->getId()
+        ]);
     }
 }

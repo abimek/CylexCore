@@ -24,15 +24,11 @@ final class SQLCollectionTask extends Task
     /**
      * Actions to execute when run
      */
-    public function onRun(int $currentTick): void
+    public function onRun(): void
     {
         $output_threaded = $this->thread->getOutput();
         while (($info = $output_threaded->shift()) !== null) {
             $info = unserialize($info);
-            if ($info === "cool:bool") {
-                var_dump("kills");
-                $this->thread->kill();
-            }
             $key = $info["key"];
             $data = $info["data"];
             if (isset(DatabaseManager::getQueries()[$key])) {

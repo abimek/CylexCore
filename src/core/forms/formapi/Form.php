@@ -39,8 +39,8 @@ abstract class Form implements IForm
         $callable = $this->getCallable();
         if ($callable !== null) {
             $callable($player, $data);
-            $pos = $player->getPosition();
-            $player->getWorld()->addSound($pos, new XpLevelUpSound(50));
+            /**$pos = $player->getPosition();
+            $player->getWorld()->addSound($pos, new XpLevelUpSound(50));**/
         }
     }
 

@@ -77,7 +77,7 @@ class IpBanDatabaseHandler
             $callable(self::getIpBanByIp($ip));
             return;
         }
-        $query = new Query("SELECT * FROM ipbans WHERE ip=?", [$ip], function ($results) use ($callable) {
+        DatabaseManager::query("SELECT * FROM ipbans WHERE ip=?", 0, [$ip], function ($results) use ($callable) {
             foreach ($results as $row) {
                 $ipban = new IpBan($row["ip"], $row["xuid"], $row["username"], $row["reason"], $row["banner_name"]);
                 $xuid = $row["xuid"];
@@ -87,7 +87,6 @@ class IpBanDatabaseHandler
                 $callable($ipban);
             }
         });
-        DatabaseManager::query($query);
     }
 
     public static function getIpBanByIp(string $ip): ?IpBan
@@ -142,21 +141,14 @@ class IpBanDatabaseHandler
     {
         foreach (self::$ipbans as $ipban) {
             if ($ipban instanceof IpBan) {
-                DatabaseManager::emptyQuery("INSERT IGNORE INTO bans(ip, xuid, username, reason, banner_name) VALUES (?, ?, ?, ?, ?);", Query::SERVER_DB, [
+               /** DatabaseManager::emptyQuery("INSERT IGNORE INTO bans(ip, xuid, username, reason, banner_name) VALUES (?, ?, ?, ?, ?);", Query::SERVER_DB, [
                     $ipban->getIp(),
                     $ipban->getXuid(),
                     $ipban->getUsername(),
                     $ipban->getReason(),
                     $ipban->getBannerName()
-                ]);
-                DatabaseManager::emptyQuery("UPDATE bans SET ip=?, xuid=?, username=?, reason=?, banner_name=? WHERE xuid=?", Query::SERVER_DB, [
-                    $ipban->getIp(),
-                    $ipban->getXuid(),
-                    $ipban->getUsername(),
-                    $ipban->getReason(),
-                    $ipban->getBannerName(),
-                    $ipban->getXuid()
-                ]);
+                ]);**/
+                $ipban->save();
             }
         }
     }

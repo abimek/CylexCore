@@ -25,7 +25,7 @@ class ChatFormatListener extends BaseListener
         if (isset($this->spam[$xuid])) {
             if ($this->spam[$xuid] > time()) {
                 $time = $this->spam[$xuid] - time();
-                $player->sendMessage(Message::PREFIX . "You can send another message in " . TextFormat::RED . $time);
+                $player->sendMessage(Message::PREFIX . "You can send another message in " . TextFormat::RED . $time . TextFormat::GRAY . "s");
                 $event->cancel();
                 return;
             } else {
@@ -38,25 +38,24 @@ class ChatFormatListener extends BaseListener
         $session = PlayerManager::getSession($player->getXuid());
         $rankIdentifier = $session->getRankIdentifier();
         $rank = RankManager::getRank($rankIdentifier);
-        $filter = TextUtil::chatFilter($event->getMessage());
-        if ($filter === null) {
-            $format = $rank->getChatFormat();
-            $format = TextUtil::replaceText($format, ["{name}" => $player->getName()]);
-            $format = TextUtil::replaceText($format, ["{msg}" => TextFormat::RED . $event->getMessage()]);
-            $event->cancel();
-            $player->sendMessage($format);
-            return;
-        }
         if ($rank === null) {
             return;
         }
+        $filter = TextUtil::chatFilter($event->getMessage());
+
         $format = $rank->getChatFormat();
         $format = TextUtil::replaceText($format, ["{name}" => $player->getName()]);
-        $format = TextUtil::replaceText($format, ["{msg}" => $filter]);
-        foreach ($callables as $callable) {
-            $callable($format, $player->getXuid());
+        if ($filter !== null){
+            $format = TextUtil::replaceText($format, ["{msg}" => $filter]);
         }
-
+        if ($filter === null) {
+            $event->cancel();
+            $player->sendMessage("" . TextFormat::GRAY . "Unable to send message.");
+            return;
+        }
+        foreach ($callables as $callable) {
+            $callable($format, $player->getXuid(), $event);
+        }
         $event->setFormat($format);
     }
 

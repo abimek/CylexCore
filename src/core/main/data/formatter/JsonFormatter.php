@@ -16,4 +16,12 @@ trait JsonFormatter
         return json_decode($data, true);
     }
 
+    public static function staticEncodeJson(array $data): string {
+        return json_encode($data, JSON_UNESCAPED_UNICODE);
+    }
+
+    public static function staticDecideJson(string $data): array {
+        return json_decode($data, true);
+    }
+
 }

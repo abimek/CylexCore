@@ -10,13 +10,17 @@ use core\admin\handlers\IpBanHandler;
 use core\admin\objects\Ban;
 use core\admin\objects\IpBan;
 use core\main\base\BaseListener;
+use core\main\text\message\Message;
+use core\network\forms\VerifyForm;
 use core\network\NetworkManager;
 use core\players\objects\PlayerObject;
 use core\players\PlayerManager;
+use pocketmine\entity\EffectInstance;
 use pocketmine\event\player\PlayerLoginEvent;
 use pocketmine\event\player\PlayerPreLoginEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\network\mcpe\protocol\types\DeviceOS;
+use pocketmine\Player;
 
 final class PlayerListener extends BaseListener
 {
@@ -48,8 +52,25 @@ final class PlayerListener extends BaseListener
     {
         $player = $event->getPlayer();
         $handler = PlayerManager::getDatabaseHandler();
-        $handler->createObject($player);
-        $handler->getPlayerObject($player->getXuid(), function ($object) use ($player, $event) {
+        $handler->createObject($player, function ($object) use ($player, $event) {
+            if ($object instanceof PlayerObject) {
+                $player = $event->getPlayer();
+                $verified = true;
+                if ($verified === true) {
+                    NetworkManager::getNetworkPlayerDBHandler()->loadAccountAndCallable($object->getXuid(), function ($networkData) use ($player) {
+                        if ($networkData->isPasswordLocked()) {
+                            $manager = $player->getEffects();
+                            $effect = new EffectInstance(VanillaEffects::BLINDNESS(), 10000000, 100, false);
+                            $manager->add($effect);
+                            $effect = new EffectInstance(VanillaEffects::SLOWNESS(), 100000, 100, false);
+                            $manager->add($effect);
+                            $this->sendVerifyForm($player, $manager);
+                        }
+                    });
+                }
+            } else {
+                $event->getPlayer()->kick(Message::PREFIX . "failed to register account, please try again.");
+            }
             if ($object instanceof PlayerObject) {
                 PlayerManager::createSession($player, $object, $this->wantsguidata[$player->getUniqueId()->toString()]);
                 $xuid = $player->getXuid();
@@ -61,6 +82,20 @@ final class PlayerListener extends BaseListener
                 });
             }
         });
+    }
+
+    private function sendVerifyForm(Player $player, EffectManager $manager)
+    {
+        $player->setInvisible(true);
+        $form = new VerifyForm($player, function (Player $player) use ($manager) {
+            $player->setInvisible(false);
+            $manager->remove(VanillaEffects::BLINDNESS());
+            $manager->remove(VanillaEffects::SLOWNESS());
+            $player->sendMessage(Message::PREFIX . "Successfully logged in!");
+        }, function (Player $player) use ($manager) {
+            $this->sendVerifyForm($player, $manager);
+        });
+        $player->sendForm($form);
     }
 
     public function onLeave(PlayerQuitEvent $event)

@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace core\admin\objects;
 
+use core\database\DatabaseManager;
+use core\database\objects\Query;
+
 class Ban
 {
 
@@ -49,5 +52,16 @@ class Ban
     public function getBannerName(): string
     {
         return $this->banner_name;
+    }
+
+    public function save(){
+        $ban = $this;
+        DatabaseManager::emptyQuery("UPDATE bans SET xuid=?, username=?, reason=?, banner_name=? WHERE xuid=?", Query::MAIN_DB, [
+            $ban->getXuid(),
+            $ban->getUsername(),
+            $ban->getReason(),
+            $ban->getBannerName(),
+            $ban->getXuid()
+        ]);
     }
 }
