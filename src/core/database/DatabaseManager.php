@@ -4,11 +4,10 @@ declare(strict_types=1);
 namespace core\database;
 
 use core\CylexCore;
-use core\database\objects\Query;
-use core\database\tasks\SQLCollectionTask;
 use core\database\threads\SQLThread;
-use poggit\libasynql\DataConnector;
+use core\database\related_objects\DataConnectorWrapper;
 use poggit\libasynql\libasynql;
+use poggit\libasynql\SqlError;
 
 final class DatabaseManager
 {
@@ -16,12 +15,12 @@ final class DatabaseManager
     private static $queries = [];
 
     /**
-     * @var DataConnector
+     * @var DataConnectorWrapper
      */
     public $database;
 
     /**
-     * @var DataConnector
+     * @var DataConnectorWrapper
      */
     public $database2;
 
@@ -38,12 +37,12 @@ final class DatabaseManager
     protected function init(): void
     {
         self::$instance = $this;
-        $this->database = libasynql::create(CylexCore::getInstance(), CylexCore::getInstance()->getConfig()->get("database"), [
+        $this->database = new DataConnectorWrapper(libasynql::create(CylexCore::getInstance(), CylexCore::getInstance()->getConfig()->get("database"), [
             "mysql" => "mysql.sql"
-        ]);
-        $this->database2 = libasynql::create(CylexCore::getInstance(), CylexCore::getInstance()->getConfig()->get("database2"), [
+        ]));
+        $this->database2 = new DataConnectorWrapper(libasynql::create(CylexCore::getInstance(), CylexCore::getInstance()->getConfig()->get("database2"), [
            "mysql" => "mysql.sql"
-        ]);
+        ]));
         //self::$sqlThread = new SQLThread([$host, $password, $username, $dbname]);
        // CylexCore::getInstance()->getScheduler()->scheduleRepeatingTask(new SQLCollectionTask(self::$sqlThread), 1);
     }
@@ -63,9 +62,13 @@ final class DatabaseManager
                     throw new \Exception("Unable to query, $parameters is lot an array on insert!");
                 }
                 if ($dbType === 0){
-                    self::getInstance()->database->executeInsertRaw($query, $parameters, $callable);
+                    self::getInstance()->database->executeInsertRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }else{
-                    self::getInstance()->database2->executeInsertRaw($query, $parameters, $callable);
+                    self::getInstance()->database2->executeInsertRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }
                 return;
             case "SELECT":
@@ -73,9 +76,13 @@ final class DatabaseManager
                     throw new \Exception("Unable to query, $parameters is lot an array on select!");
                 }
                 if ($dbType === 0){
-                    self::getInstance()->database->executeSelectRaw($query, $parameters, $callable);
+                    self::getInstance()->database->executeSelectRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }else{
-                    self::getInstance()->database2->executeSelectRaw($query, $parameters, $callable);
+                    self::getInstance()->database2->executeSelectRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }
                 return;
             case "CREATE":
@@ -83,9 +90,13 @@ final class DatabaseManager
                     throw new \Exception("Unable to query, $parameters is lot an array on create!");
                 }
                 if ($dbType === 0){
-                    self::getInstance()->database->executeGenericRaw($query, $parameters, $callable);
+                    self::getInstance()->database->executeGenericRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }else{
-                    self::getInstance()->database2->executeGenericRaw($query, $parameters, $callable);
+                    self::getInstance()->database2->executeGenericRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }
                 return;
             case "DELETE":
@@ -93,9 +104,13 @@ final class DatabaseManager
                     throw new \Exception("Unable to query, $parameters is lot an array on delete!");
                 }
                 if ($dbType === 0){
-                    self::getInstance()->database->executeGenericRaw($query, $parameters, $callable);
+                    self::getInstance()->database->executeGenericRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }else{
-                    self::getInstance()->database2->executeGenericRaw($query, $parameters, $callable);
+                    self::getInstance()->database2->executeGenericRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }
                 return;
             case "UPDATE":
@@ -103,9 +118,13 @@ final class DatabaseManager
                     throw new \Exception("Unable to query, $parameters is lot an array on update!");
                 }
                 if ($dbType === 0){
-                    self::getInstance()->database->executeChangeRaw($query, $parameters, $callable);
+                    self::getInstance()->database->executeChangeRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }else{
-                    self::getInstance()->database2->executeChangeRaw($query, $parameters, $callable);
+                    self::getInstance()->database2->executeChangeRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }
                 return;
             case "DROP":
@@ -113,9 +132,13 @@ final class DatabaseManager
                     throw new \Exception("Unable to query, $parameters is lot an array on drop!");
                 }
                 if ($dbType === 0){
-                    self::getInstance()->database->executeGenericRaw($query, $parameters, $callable);
+                    self::getInstance()->database->executeGenericRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }else{
-                    self::getInstance()->database2->executeGenericRaw($query, $parameters, $callable);
+                    self::getInstance()->database2->executeGenericRaw($query, $parameters, $callable, function (SqlError $error, \Exception $trace){
+                        var_dump($error);
+                    });
                 }
                 return;
         }

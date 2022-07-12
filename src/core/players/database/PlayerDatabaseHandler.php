@@ -43,7 +43,7 @@ final class PlayerDatabaseHandler
     {
         $this->table_name = CylexCore::getInstance()->getConfig()->get("PlayerTableName");
         $t = $this->table_name;
-        DatabaseManager::emptyQuery("CREATE TABLE IF NOT EXISTS {$t}(xuid VARCHAR(36) PRIMARY KEY, username TEXT, ip TEXT, rank TEXT, ban_count INTEGER, ban_data TEXT)", Query::SERVER_DB, []);
+        DatabaseManager::emptyQuery("CREATE TABLE IF NOT EXISTS {$t}(xuid VARCHAR(36) PRIMARY KEY, username TEXT, ip TEXT, prank TEXT, ban_count INT, ban_data TEXT);", Query::SERVER_DB, []);
     }
 
     public static function getTableName(): string {
@@ -101,7 +101,7 @@ final class PlayerDatabaseHandler
             $playerObject = new PlayerObject($ban_data, $xuid, $username, $ip, $rank, $ban_count);
             PlayerManager::createSession($player, $playerObject, PlayerListener::wantsGui($player->getUniqueId()->toString()));
             $this->players[$xuid] = $playerObject;
-            DatabaseManager::emptyQuery("INSERT IGNORE INTO {$this->table_name}(xuid, username, ip, rank, ban_count, ban_data) VALUES (?, ?, ?, ?, ?, ?);", Query::SERVER_DB, [
+            DatabaseManager::emptyQuery("INSERT IGNORE INTO {$this->table_name}(xuid, username, ip, prank, ban_count, ban_data) VALUES (?, ?, ?, ?, ?, ?);", Query::SERVER_DB, [
                 $playerObject->getXuid(),
                 $playerObject->getUsername(),
                 $playerObject->getIp(),
@@ -166,7 +166,7 @@ final class PlayerDatabaseHandler
 
     public function savePlayer(PlayerObject $object)
     {
-        DatabaseManager::emptyQuery("UPDATE {$this->table_name} SET username=?, ip=?, rank=?, ban_count=?, ban_data=? WHERE xuid=?", Query::SERVER_DB, [
+        DatabaseManager::emptyQuery("UPDATE {$this->table_name} SET username=?, ip=?, prank=?, ban_count=?, ban_data=? WHERE xuid=?", Query::SERVER_DB, [
             $object->getUsername(),
             $object->getIp(),
             $object->getRank(),

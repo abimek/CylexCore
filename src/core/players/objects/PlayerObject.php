@@ -6,6 +6,7 @@ namespace core\players\objects;
 use core\database\DatabaseManager;
 use core\database\objects\Query;
 use core\players\database\PlayerDatabaseHandler;
+use core\players\PlayerManager;
 
 class PlayerObject
 {
@@ -95,17 +96,7 @@ class PlayerObject
     }
 
     public function save(){
-        $t = PlayerDatabaseHandler::getTableName();
-        $playerObject = $this;
-        DatabaseManager::emptyQuery("UPDATE {$t} SET xuid=?, username=?, ip=?, rank=?, ban_count=?, ban_data=? WHERE xuid=?", Query::SERVER_DB, [
-            $playerObject->getXuid(),
-            $playerObject->getUsername(),
-            $playerObject->getIp(),
-            $playerObject->getRank(),
-            $playerObject->getBanCount(),
-            $playerObject->getBanData()->encodeData(),
-            $playerObject->getXuid()
-        ]);
+        PlayerManager::getDatabaseHandler()->savePlayer($this);
     }
 
     /**

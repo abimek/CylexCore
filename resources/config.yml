@@ -9,5 +9,15 @@ database:
     username: cylexdev
     schema: cylexdev
     password: "Shashemene1!"
+    worker-limit: 1
+
+database2:
+  type: mysql
+  mysql:
+    host: 51.81.33.250
+    username: cylexdev
+    schema: cylexdev1
+    password: "Shashemene1!"
+    worker-limit: 1
 
 

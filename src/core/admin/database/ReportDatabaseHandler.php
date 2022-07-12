@@ -19,7 +19,7 @@ class ReportDatabaseHandler
 
     private function init()
     {
-        DatabaseManager::query("CREATE TABLE IF NOT EXISTS reports(id VARCHAR(36) PRIMARY KEY, reporter TEXT, reason TEXT, reported_person TEXT, unix_time INTEGER);", 0, [], function ($result) {
+        DatabaseManager::query("CREATE TABLE IF NOT EXISTS reports(id VARCHAR(36) PRIMARY KEY, reporter TEXT, reason TEXT, reported_person TEXT, unix_time INTEGER);", 0, [], function () {
             DatabaseManager::query("SELECT * FROM reports", 0, [], function ($result) {
                 foreach ($result as $row) {
                     $report = new Report($row["id"], $row["reporter"], $row["reason"], $row["reported_person"], $row["unix_time"]);
