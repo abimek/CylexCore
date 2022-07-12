@@ -1,5 +1,13 @@
+# The name of the network players database
 PlayerTableName: main_players
-Host: "140.82.11.202"
-Password: "u884_dg2h4KJtE4"
-Username: "TbLAVM@Snh1sXwv.s@!Z=irE"
-DbName: "s884_elementalfac"
+
+# Network database info
+database:
+  type: mysql
+  mysql:
+    host: 51.81.33.250
+    username: cylexdev
+    schema: cylexdev
+    password: "Shashemene1!"
+
+
