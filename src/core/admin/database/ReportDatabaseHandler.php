@@ -19,8 +19,8 @@ class ReportDatabaseHandler
 
     private function init()
     {
-        DatabaseManager::query("CREATE TABLE IF NOT EXISTS reports(id VARCHAR(36) PRIMARY KEY, reporter TEXT, reason TEXT, reported_person TEXT, unix_time INTEGER);", 0, [], function () {
-            DatabaseManager::query("SELECT * FROM reports", 0, [], function ($result) {
+        DatabaseManager::query("CREATE TABLE IF NOT EXISTS reports(id VARCHAR(36) PRIMARY KEY, reporter TEXT, reason TEXT, reported_person TEXT, unix_time INTEGER);", Query::SERVER_DB, [], function () {
+            DatabaseManager::query("SELECT * FROM reports", Query::SERVER_DB, [], function ($result) {
                 foreach ($result as $row) {
                     $report = new Report($row["id"], $row["reporter"], $row["reason"], $row["reported_person"], $row["unix_time"]);
                     self::$reports[$row["id"]] = $report;
@@ -36,7 +36,7 @@ class ReportDatabaseHandler
     {
         if (isset(self::$reports[$id])) {
             unset(self::$reports[$id]);
-            DatabaseManager::emptyQuery("DELETE FROM reports WHERE id=?", 0, [$id]);
+            DatabaseManager::emptyQuery("DELETE FROM reports WHERE id=?", Query::SERVER_DB, [$id]);
         }
     }
 

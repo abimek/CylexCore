@@ -22,7 +22,7 @@ class IpBanDatabaseHandler
 
     private function init()
     {
-        DatabaseManager::emptyQuery("CREATE TABLE IF NOT EXISTS ipbans(ip VARCHAR(20) PRIMARY KEY , xuid TEXT, username TEXT, reason TEXT, banner_name TEXT);", 0, null);
+        DatabaseManager::emptyQuery("CREATE TABLE IF NOT EXISTS ipbans(ip VARCHAR(20) PRIMARY KEY , xuid TEXT, username TEXT, reason TEXT, banner_name TEXT);", Query::SERVER_DB, null);
     }
 
     /**
@@ -77,7 +77,7 @@ class IpBanDatabaseHandler
             $callable(self::getIpBanByIp($ip));
             return;
         }
-        DatabaseManager::query("SELECT * FROM ipbans WHERE ip=?", 0, [$ip], function ($results) use ($callable) {
+        DatabaseManager::query("SELECT * FROM ipbans WHERE ip=?", Query::SERVER_DB, [$ip], function ($results) use ($callable) {
             foreach ($results as $row) {
                 $ipban = new IpBan($row["ip"], $row["xuid"], $row["username"], $row["reason"], $row["banner_name"]);
                 $xuid = $row["xuid"];

@@ -77,7 +77,7 @@ final class PlayerDatabaseHandler
                     $banObject = BanDataObject::createObjectFromData($ban_data);
                     $username = $player_data["username"];
                     $ip = $player_data["ip"];
-                    $rank = $player_data["rank"];
+                    $rank = $player_data["prank"];
                     $ban_count = $player_data["ban_count"];
                 } else {
                     $rank = Rookie::ROOKIE;

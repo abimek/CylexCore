@@ -20,7 +20,7 @@ class BanDatabaseHandler
 
     private function init()
     {
-        DatabaseManager::emptyQuery("CREATE TABLE IF NOT EXISTS bans(xuid VARCHAR(36) PRIMARY KEY , username TEXT, reason TEXT, banner_name TEXT);", 0, null);
+        DatabaseManager::emptyQuery("CREATE TABLE IF NOT EXISTS bans(xuid VARCHAR(36) PRIMARY KEY , username TEXT, reason TEXT, banner_name TEXT);", Query::SERVER_DB, null);
     }
 
     /**
@@ -34,7 +34,7 @@ class BanDatabaseHandler
                 unset(self::$bans[$xuid]);
             }
         }
-        DatabaseManager::emptyQuery("DELETE FROM bans WHERE username=?", Query::MAIN_DB, [$username]);
+        DatabaseManager::emptyQuery("DELETE FROM bans WHERE username=?", Query::SERVER_DB, [$username]);
     }
 
     /**
@@ -45,7 +45,7 @@ class BanDatabaseHandler
         if (isset(self::$bans[$xuid])) {
             unset(self::$bans[$xuid]);
         }
-        DatabaseManager::emptyQuery("DELETE FROM bans WHERE xuid=?", Query::MAIN_DB, [$xuid]);
+        DatabaseManager::emptyQuery("DELETE FROM bans WHERE xuid=?", Query::SERVER_DB, [$xuid]);
     }
 
     /**
@@ -78,7 +78,7 @@ class BanDatabaseHandler
             $callable(self::$bans[$xuid]);
             return;
         }
-        DatabaseManager::query("SELECT * FROM bans WHERE xuid=?", 0, [
+        DatabaseManager::query("SELECT * FROM bans WHERE xuid=?", Query::SERVER_DB, [
             $xuid
         ], function ($result) use ($callable, $xuid) {
             foreach ($result as $row) {
@@ -104,13 +104,13 @@ class BanDatabaseHandler
         self::$bans[$ban->getXuid()] = $ban;
         self::$usernameMap[$ban->getUsername()] = $ban->getXuid();
         if ($update) {
-            DatabaseManager::emptyQuery("INSERT IGNORE INTO bans(xuid, username, reason, banner_name) VALUES (?, ?, ?, ?);", Query::MAIN_DB, [
+            DatabaseManager::emptyQuery("INSERT IGNORE INTO bans(xuid, username, reason, banner_name) VALUES (?, ?, ?, ?);", Query::SERVER_DB, [
                 $ban->getXuid(),
                 $ban->getUsername(),
                 $ban->getReason(),
                 $ban->getBannerName()
             ]);
-            DatabaseManager::emptyQuery("UPDATE bans SET xuid=?, username=?, reason=?, banner_name=? WHERE xuid=?", Query::MAIN_DB, [
+            DatabaseManager::emptyQuery("UPDATE bans SET xuid=?, username=?, reason=?, banner_name=? WHERE xuid=?", Query::SERVER_DB, [
                 $ban->getXuid(),
                 $ban->getUsername(),
                 $ban->getReason(),
@@ -118,7 +118,7 @@ class BanDatabaseHandler
                 $ban->getXuid()
             ]);
         } else {
-            DatabaseManager::emptyQuery("INSERT IGNORE INTO bans(xuid, username, reason, banner_name) VALUES (?, ?, ?, ?);", Query::MAIN_DB, [
+            DatabaseManager::emptyQuery("INSERT IGNORE INTO bans(xuid, username, reason, banner_name) VALUES (?, ?, ?, ?);", Query::SERVER_DB, [
                 $ban->getXuid(),
                 $ban->getUsername(),
                 $ban->getReason(),

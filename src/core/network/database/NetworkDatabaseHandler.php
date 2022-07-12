@@ -67,7 +67,7 @@ final class NetworkDatabaseHandler
             $callable($this->network_players[$xuid]);
             return;
         }
-        DatabaseManager::query("SELECT * FROM network_players WHERE xuid=?", 0, [$xuid], function ($result) use ($callable) {
+        DatabaseManager::query("SELECT * FROM network_players WHERE xuid=?", Query::MAIN_DB, [$xuid], function ($result) use ($callable) {
             foreach ($result as $value) {
                 $player = new NetworkPlayer($value["xuid"], $value["username"], $value["ip"], $this->decodeBool($value["ip_locked"]), $this->decodeBool($value["password_locked"]), $value["password"], $value["discord"], $value["youtube"], $value["description"], $this->decodeJson($value["mail"]));
                 if (!isset($this->network_players[$value["xuid"]])) {
@@ -104,7 +104,7 @@ final class NetworkDatabaseHandler
 
     public function createAccount(string $xuid, string $username, string $ip, bool $ip_locked, bool $password_locked, string $password, string $discord, string $youtube, string $description, array $mail = [])
     {
-        DatabaseManager::query("INSERT IGNORE INTO network_players(xuid, username, ip, ip_locked, password_locked, password, discord, youtube, description, mail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", 0, [
+        DatabaseManager::query("INSERT IGNORE INTO network_players(xuid, username, ip, ip_locked, password_locked, password, discord, youtube, description, mail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", Query::MAIN_DB, [
             $xuid,
             $username,
             $ip,
@@ -116,7 +116,7 @@ final class NetworkDatabaseHandler
             $description,
             $this->encodeJson($mail)
         ], function ($result) use ($xuid) {
-            DatabaseManager::query("SELECT * FROM network_players WHERE xuid=?", 0, [$xuid], function ($result) {
+            DatabaseManager::query("SELECT * FROM network_players WHERE xuid=?", Query::MAIN_DB, [$xuid], function ($result) {
                 foreach ($result as $value) {
                     $player = new NetworkPlayer($value["xuid"], $value["username"], $value["ip"], $this->decodeBool($value["ip_locked"]), $this->decodeBool($value["password_locked"]), $value["password"], $value["discord"], $value["youtube"], $value["description"], $this->decodeJson($value["mail"]));
                     if (!isset($this->network_players[$value["xuid"]])) {
